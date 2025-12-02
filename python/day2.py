@@ -1,7 +1,8 @@
 import sys
 from pathlib import Path
 
-def invalid(id_val: int) -> bool:
+
+def invalid_p1(id_val: int) -> bool:
     id_str = str(id_val)
     if len(id_str) % 2:
         return False
@@ -14,14 +15,28 @@ def part1(id_pairs: list[list[int]]):
     res = 0
     for start, end in id_pairs:
         for i in range(start, end + 1):
-            if invalid(i):
+            if invalid_p1(i):
                 res += i
     return res
 
 
+def invalid_p2(id_val: int) -> bool:
+    id_str = str(id_val)
+    for digit_len in range(1, len(id_str) // 2 + 1):
+        sub_id = id_str[:digit_len]
+        s = sub_id * (len(id_str) // digit_len)
+        if id_str == s:
+            return True
+    return False
 
-def part2():
-    pass
+
+def part2(id_pairs: list[list[int]]):
+    res = 0
+    for start, end in id_pairs:
+        for i in range(start, end + 1):
+            if invalid_p2(i):
+                res += i
+    return res
 
 
 def parse(data: str) -> list[list[int]]:
@@ -39,4 +54,4 @@ if __name__ == "__main__":
     inp_data = parse(inp)
 
     print("part1=" + str(part1(inp_data)))
-    # print("part2=" + str(part2(inp_data)))
+    print("part2=" + str(part2(inp_data)))
