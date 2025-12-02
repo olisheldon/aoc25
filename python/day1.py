@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Type
-from enum import StrEnum, auto
+from enum import StrEnum
 
 
 NUMBER_OF_COMBINATIONS = 100
@@ -26,8 +25,12 @@ class RotationDirection(StrEnum):
 def rot(direction: RotationDirection, distance: int, combination: int) -> tuple[int, int]:
     init_combination = combination
     distance *= RotationDirection.get_rot_direction(direction)
-    num_of_clicks = abs((init_combination + distance) // 100)
     combination += distance
+    num_of_clicks = abs(distance) // 100
+    final_pos = (init_combination + distance) % 100
+    if distance > 0:
+        if final_pos <= (init_combination + distance - 100 * (abs(distance) // 100)):
+            num_of_clicks += 1
     return (combination % 100), num_of_clicks
 
 
@@ -48,7 +51,7 @@ def part2(instructions: list[tuple["RotationDirection", int]]):
         rot_dir, dist = instruction
         combination, num_of_clicks = rot(rot_dir, dist, combination)
         print(f"{combination=}, {instruction=}, {num_of_clicks=}")
-        res += num_of_clicks > 0
+        res += num_of_clicks
     return res
 
 
