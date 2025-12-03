@@ -1,24 +1,35 @@
 import sys
 from pathlib import Path
-from collections import Counter
 import heapq
 
 
-def max_joltage(bank: list[int]) -> int:
-    first_digit = max(bank[:len(bank) - 1])
-    second_digit = max(bank[bank.index(first_digit) + 1 : len(bank)])
-    return int("".join(map(str,[first_digit, second_digit])))
+def max_joltage(bank: list[int], digits=12) -> int:
+    res = []
+    start = 0
+    
+    for i in range(digits):
+        end = len(bank) - (digits - i) + 1
+
+        max_digit = max(bank[start:end])
+        max_idx = bank.index(max_digit, start, end)
+        
+        res.append(max_digit)
+        start = max_idx + 1
+    return int("".join(map(str, res)))
 
 
 def part1(banks: list[list[int]]):
-    res = 0
+    res = []
     for bank in banks:
-        res += max_joltage(bank)
-    return res
+        res.append(max_joltage(bank, digits=2))
+    return sum(res)
 
 
-def part2():
-    pass
+def part2(banks: list[list[int]]):
+    res = []
+    for bank in banks:
+        res.append(max_joltage(bank, digits=12))
+    return sum(res)
 
 
 def parse(data: str) -> list[list[int]]:
@@ -33,4 +44,4 @@ if __name__ == "__main__":
     inp_data = parse(inp)
 
     print("part1=" + str(part1(inp_data)))
-    # print("part2=" + str(part2(inp_data)))
+    print("part2=" + str(part2(inp_data)))
