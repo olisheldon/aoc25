@@ -2,6 +2,17 @@ import sys
 from pathlib import Path
 
 
+def merge_intervals(intervals: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    intervals.sort()
+    merged_intervals = [intervals[0]]
+    for start, end in intervals[1:]:
+        if start <= merged_intervals[-1][1]:
+            merged_intervals[-1][1] = max(merged_intervals[-1][1], end)
+        else:
+            merged_intervals.append([start, end])
+    return merged_intervals
+
+
 def part1(fresh_ingredient_ranges, available_ingredient_ids):
     fresh_ingredient_ranges = [range(fresh[0], fresh[1] + 1) for fresh in fresh_ingredient_ranges]
     res = 0
@@ -15,13 +26,16 @@ def part1(fresh_ingredient_ranges, available_ingredient_ids):
     return res
 
 
-def part2():
-    pass
+def part2(fresh_ingredient_ranges, _):
+    intervals: list[tuple[int, int]] = fresh_ingredient_ranges.copy()
+    merged_intervals = merge_intervals(intervals)
+    return sum(end - start + 1 for start, end in merged_intervals)
 
 
 def parse(data: str) -> tuple[list[tuple[int, int]], list[int]]:
     fresh_ingredient_ranges, available_ingredient_ids = data.split("\n\n")
-    fresh_ingredient_ranges, available_ingredient_ids = fresh_ingredient_ranges.split("\n"), available_ingredient_ids.split("\n")
+    fresh_ingredient_ranges = fresh_ingredient_ranges.split("\n") 
+    available_ingredient_ids = available_ingredient_ids.split("\n")
     fresh_ingredient_ranges = [list(map(int, r.split("-"))) for r in fresh_ingredient_ranges]
     available_ingredient_ids = list(map(int, available_ingredient_ids))
     return fresh_ingredient_ranges, available_ingredient_ids
@@ -33,4 +47,4 @@ if __name__ == "__main__":
     inp_data = parse(inp)
 
     print("part1=" + str(part1(*inp_data)))
-    print("part2=" + str(part2(inp_data)))
+    print("part2=" + str(part2(*inp_data)))
