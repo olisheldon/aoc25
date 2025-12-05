@@ -2,7 +2,8 @@ import sys
 from pathlib import Path
 
 
-def part1(grid: list[str]):
+def remove_rolls(grid: list[list[str]]):
+    grid_copy = [row.copy() for row in grid]
     ROWS, COLS = len(grid), len(grid[0])
     NEIGHBOURS = (
         (1, 0),
@@ -16,6 +17,7 @@ def part1(grid: list[str]):
         )
     
     PAPER = '@'
+    EMPTY = '.'
     res = 0
     for r in range(ROWS):
         for c in range(COLS):
@@ -33,15 +35,25 @@ def part1(grid: list[str]):
                 adj_paper_count += 1
             if adj_paper_count < 4:
                 res += 1
-    return res
+                grid_copy[r][c] = EMPTY
+    return res, grid_copy
 
 
-def part2():
-    pass
+def part1(grid: list[list[str]]):
+    return remove_rolls(grid)[0]
+
+
+def part2(grid: list[list[str]]):
+    res = 0
+    while True:
+        replacements, grid = remove_rolls(grid)
+        res += replacements
+        if replacements == 0:
+            return res
 
 
 def parse(data: str):
-    return data.split("\n")
+    return list(map(list,data.split("\n")))
 
 
 if __name__ == "__main__":
