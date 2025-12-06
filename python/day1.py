@@ -24,14 +24,14 @@ class RotationDirection(StrEnum):
 
 def rot(direction: RotationDirection, distance: int, combination: int) -> tuple[int, int]:
     init_combination = combination
-    distance *= RotationDirection.get_rot_direction(direction)
+    rot_direction = RotationDirection.get_rot_direction(direction)
+    distance *= rot_direction
     combination += distance
-    num_of_clicks = abs(distance) // 100
-    final_pos = (init_combination + distance) % 100
-    if distance > 0:
-        if final_pos <= (init_combination + distance - 100 * (abs(distance) // 100)):
-            num_of_clicks += 1
-    return (combination % 100), num_of_clicks
+    num_clicks = 0
+    for intermediate_combination in range(init_combination, combination, rot_direction):
+        if not intermediate_combination % 100:
+            num_clicks += 1
+    return (combination % 100), num_clicks
 
 
 def part1(instructions: list[tuple["RotationDirection", int]]):
@@ -49,9 +49,8 @@ def part2(instructions: list[tuple["RotationDirection", int]]):
     combination = INITIAL_COMBINATION
     for instruction in instructions:
         rot_dir, dist = instruction
-        combination, num_of_clicks = rot(rot_dir, dist, combination)
-        print(f"{combination=}, {instruction=}, {num_of_clicks=}")
-        res += num_of_clicks
+        combination, num_clicks = rot(rot_dir, dist, combination)
+        res += num_clicks
     return res
 
 
