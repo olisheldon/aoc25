@@ -2,6 +2,7 @@ from collections import deque
 import sys
 from pathlib import Path
 from enum import StrEnum
+from functools import lru_cache
 
 
 class Tachyon(StrEnum):
@@ -40,8 +41,30 @@ def part1(grid: list[list[Tachyon]]):
     return split_count
 
 
-def part2():
-    pass
+def part2(grid: list[list[Tachyon]]):
+    ROWS, COLS = len(grid), len(grid[0])
+    
+    @lru_cache
+    def dfs(r, c):
+        if (
+            r not in range(ROWS) or
+            c not in range(COLS)
+        ):
+            return False
+        if r == ROWS - 1:
+            return True
+        
+        res = 0
+        match grid[r][c]:
+            case Tachyon.EMPTY | Tachyon.START:
+                res += dfs(r + 1, c)
+            case Tachyon.SPLITTER:
+                res += dfs(r, c - 1)
+                res += dfs(r, c + 1)
+            case _:
+                raise RuntimeError(f"{grid[r][c]=} not valid")
+        return res
+    return dfs(0, grid[0].index(Tachyon.START))
 
 
 def parse(data: str):
