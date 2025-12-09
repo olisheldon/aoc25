@@ -5,6 +5,7 @@ from enum import StrEnum
 
 class Tile(StrEnum):
     RED = '#'
+    GREEN = 'X'
     PLAIN = '.'
 
 
@@ -18,8 +19,32 @@ def part1(tiles: list[tuple[int, int]]) -> int:
     return res
 
 
-def part2():
-    pass
+def create_grid(red_tiles: list[tuple[int, int]]) -> list[list[Tile]]:
+    max_r = max(r for (r, _) in red_tiles)
+    max_c = max(c for (_, c) in red_tiles)
+    grid = [[Tile.PLAIN for _ in range(max_c + 1)] for _ in range(max_r + 1)]
+    for ((r1, c1), (r2, c2)) in zip(red_tiles, red_tiles[1:]):
+        if r1 == r2:
+            dc = +1 if c2 > c1 else -1
+            while c1 != c2:
+                grid[r1][c1] = Tile.GREEN
+                c1 += dc
+        else:
+            dr = +1 if r2 > r1 else -1
+            while r1 != r2:
+                grid[r1][c1] = Tile.GREEN
+                r1 += dr
+    return grid
+
+
+def print_grid(grid: list[list[Tile]]) -> None:
+    for row in grid:
+        print("".join(str(elem) for elem in row))
+
+
+def part2(red_tiles: list[tuple[int, int]]):
+    grid = create_grid(red_tiles)
+    print_grid(grid)
 
 
 def parse(data: str) -> list[tuple[int, int]]:
