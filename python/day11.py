@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache, lru_cache
 import sys
 from pathlib import Path
 
@@ -7,6 +7,7 @@ def part1(adj: dict[str, list[str]]) -> int:
     START = 'you'
     END = 'out'
 
+    @lru_cache
     def dfs(u: str) -> int:
         if u == END:
             return 1
@@ -18,8 +19,22 @@ def part1(adj: dict[str, list[str]]) -> int:
     return dfs(START)
 
 
-def part2():
-    pass
+def part2(adj: dict[str, list[str]]):
+    START = 'svr'
+    END = 'out'
+
+    @cache
+    def dfs(u: str, visited: frozenset[str]) -> int:
+        if u == END:
+            return 1 if 'fft' in visited and 'dac' in visited else 0
+        
+        res = 0
+        for v in adj[u]:
+            visited = visited.union({v})
+            res += dfs(v, visited)
+            visited = visited.difference({v})
+        return res
+    return dfs(START, frozenset())
 
 
 def parse(data: str) -> dict[str, list[str]]:
@@ -36,5 +51,5 @@ if __name__ == "__main__":
         inp = f.read()
     inp_data = parse(inp)
 
-    print("part1=" + str(part1(inp_data)))
+    # print("part1=" + str(part1(inp_data)))
     print("part2=" + str(part2(inp_data)))
