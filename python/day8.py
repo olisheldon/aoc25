@@ -3,7 +3,7 @@ import heapq
 import sys
 from pathlib import Path
 
-TEST = True
+TEST = False
 CONNECTIONS = 10 if TEST else 1000
 
 def part1(coords: list[tuple[int, int, int]]):
@@ -19,22 +19,22 @@ def part1(coords: list[tuple[int, int, int]]):
             heapq.heappush(min_heap, (dist, (i, j)))
 
     connections = 0
-    # circuits: list[set[int]] = []
     node_to_circuit: dict[int, set[int]] = {} # {i : circuit}
-    # circuit_to_node: dict[set[int], list[int]] = {} # {circuit : [i, ...]}
     while connections < CONNECTIONS:
         dist, (i, j) = heapq.heappop(min_heap)
         if i not in node_to_circuit and j not in node_to_circuit:
             # neither nodes are in a circuit, so just join and create circuit
-            node_to_circuit[i] = node_to_circuit[j] = {i, j}
+            node_to_circuit[i] = {i, j}
+            node_to_circuit[j] = node_to_circuit[i]
         elif i in node_to_circuit and j in node_to_circuit:
             # both in circuits, maybe different circuits so join the circuits (add j's circuit with i's circuit)
             if node_to_circuit[i] is node_to_circuit[j]:
+                connections += 1
                 continue
             node_to_circuit[i] = node_to_circuit[i].union(node_to_circuit[j])
-            for node in node_to_circuit[j]:
+            for node in node_to_circuit[i]:
                 node_to_circuit[node] = node_to_circuit[i]
-            del node_to_circuit[j]
+            # del node_to_circuit[j]
         elif i in node_to_circuit:
             # i is in a circuit, so join j with that circuit
             node_to_circuit[i].add(j)
@@ -46,8 +46,8 @@ def part1(coords: list[tuple[int, int, int]]):
         else:
             raise RuntimeError(f"should have enumerated all possibilities, {i=}, {j=}, {node_to_circuit=}, {node_to_circuit=}")
         connections += 1
+        circuits = sorted(list({id(s): s for s in node_to_circuit.values()}.values()), reverse=True, key=set.__sizeof__)
     circuits = sorted(list({id(s): s for s in node_to_circuit.values()}.values()), reverse=True, key=set.__sizeof__)
-    print(circuits)
     return len(circuits[0]) * len(circuits[1]) * len(circuits[2])
             
 
