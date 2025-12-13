@@ -1,9 +1,8 @@
-from collections import defaultdict
 import heapq
 import sys
 from pathlib import Path
 
-TEST = True
+TEST = False
 CONNECTIONS = 10 if TEST else 1000
 
 
@@ -59,19 +58,12 @@ def part1(coords: list[tuple[int, int, int]]):
 def part2(coords: list[tuple[int, int, int]]):
     min_heap = create_circuits(coords)
     node_to_circuit: dict[int, set[int]] = {} # {i : circuit}
-    get_num_circuits = lambda: len(set(id(s) for s in node_to_circuit.values()))
-    # completely arbitrary, not a sign of good code
-    INIT_CIRCUIT = 10
-    for _ in range(INIT_CIRCUIT):
-        connect_circuits(min_heap, node_to_circuit)
-    while get_num_circuits() != 0:
-        connect_circuits(min_heap, node_to_circuit)
-    res = []
-    while min_heap:
-        _, (i, j) = heapq.heappop(min_heap)
-        res.append(coords[i][0] * coords[j][0])
+    get_num_circuits = lambda: len(set(id(s) for s in node_to_circuit.values())) + sum(i for i in range(len(coords)) if i not in node_to_circuit)
+    res = 0
+    while get_num_circuits() > 1:
+        i, j = connect_circuits(min_heap, node_to_circuit)
+        res = coords[i][0] * coords[j][0]
     return res
-    return coords[i][0] * coords[j][0]
 
 
 def parse(data: str) -> list[tuple[int, int, int]]:
