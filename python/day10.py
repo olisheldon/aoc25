@@ -1,7 +1,7 @@
 from collections import deque
 import sys
 from pathlib import Path
-from enum import StrEnum
+from enum import Enum, StrEnum, auto
 
 
 class IndicatorLight(StrEnum):
@@ -11,58 +11,111 @@ class IndicatorLight(StrEnum):
     @staticmethod
     def toggle(light: 'IndicatorLight') -> 'IndicatorLight':
         return IndicatorLight.ON if light is IndicatorLight.OFF else IndicatorLight.OFF
+    
+
+class Target(Enum):
+    LIGHTS = auto()
+    JOLTAGE = auto()
+
 
 Row = tuple[list[IndicatorLight], list[list[int]], list[int]]
+Comparer = list[IndicatorLight] | list[int]
 
 class Scheme:
 
-    def __init__(self, row: Row):
+    def __init__(self, row: Row, target: Target):
+        self.target: Target = target
+
         self.target_lights: list[IndicatorLight] = row[0]
         self.buttons: list[list[int]] = row[1]
-        self.joltage: list[int] = row[2]
-        self.lights = [IndicatorLight.OFF for _ in range(len(self.target_lights))]
+        self.target_joltage: list[int] = row[2]
     
 
     @staticmethod
-    def create_schemes(rows: list[Row]) -> list['Scheme']:
-        return list(map(Scheme, rows))
+    def create_schemes(rows: list[Row], target: Target = Target.LIGHTS) -> list['Scheme']:
+        return [Scheme(row, target) for row in rows]
     
 
-    @staticmethod
-    def press_button(lights: list[IndicatorLight], button: list[int]):
-        lights = lights.copy()
-        for b in button:
-            lights[b] = IndicatorLight.toggle(lights[b])
-        return lights
+    def press_button(self, comparer: Comparer, button: list[int]) -> Comparer:
+        comparer = comparer.copy()
+        match self.target:
+            case Target.LIGHTS:
+                for b in button:
+                    comparer[b] = IndicatorLight.toggle(comparer[b])
+                return comparer
+            case Target.JOLTAGE:
+                for b in button:
+                    comparer[b] += 1
+                return comparer
+            case _:
+                raise RuntimeError()
+            
+    
+    def have_we_gone_past(self, comparer: Comparer) -> bool:
+        match self.target:
+            case Target.LIGHTS:
+                return False
+            case Target.JOLTAGE:
+                return any(c > t for c, t in zip(comparer, self.target_joltage))
+            case _:
+                raise RuntimeError()
+
+    
+
+    def are_we_there_yet(self, comparer: Comparer) -> bool:
+        match self.target:
+            case Target.LIGHTS:
+                return comparer == self.target_lights
+            case Target.JOLTAGE:
+                return comparer == self.target_joltage
+            case _:
+                raise RuntimeError()
+    
+
+    def init_comparer(self) -> list[IndicatorLight] | list[int]:
+        match self.target:
+            case Target.LIGHTS:
+                return [IndicatorLight.OFF] * len(self.target_lights)
+            case Target.JOLTAGE:
+                return [0] * len(self.target_joltage)
+            case _:
+                raise RuntimeError()
     
     
     def simulate(self) -> int:
-        lights = [IndicatorLight.OFF for _ in range(len(self.target_lights))]
+        return self.bfs()
+
+    def bfs(self) -> int:
+        comparer: Comparer = self.init_comparer()
         visited: set[tuple[IndicatorLight, ...]] = set()
-        q: deque[tuple[list[IndicatorLight], list[int]]] = deque([(lights, [])]) # (light state, list of buttons pressed)
+        q: deque[tuple[list[IndicatorLight], list[int]]] = deque([(comparer, [])]) # (light state, list of buttons pressed)
         steps = 0
         while q:
             for _ in range(len(q)):
-                lights, buttons_pressed = q.popleft()
-                if lights == self.target_lights:
+                comparer, buttons_pressed = q.popleft()
+                if self.are_we_there_yet(comparer):
                     return steps
-                if tuple(lights) in visited:
+                if self.have_we_gone_past(comparer):
                     continue
-                visited.add(tuple(lights))
+                if tuple(comparer) in visited:
+                    continue
+                visited.add(tuple(comparer))
 
                 for i, button in enumerate(self.buttons):
-                    q.append((Scheme.press_button(lights, button), buttons_pressed + [i]))
+                    q.append((self.press_button(comparer, button), buttons_pressed + [i]))
             steps += 1
+            print(steps)
         return -1
 
 
 def part1(rows: list[Row]):
-    schemes = Scheme.create_schemes(rows)
+    schemes = Scheme.create_schemes(rows, target=Target.LIGHTS)
     return sum(scheme.simulate() for scheme in schemes)
 
 
-def part2():
-    pass
+def part2(rows: list[Row]):
+    schemes = Scheme.create_schemes(rows, target=Target.JOLTAGE)
+    return sum(scheme.simulate() for scheme in schemes[:1])
 
 
 def parse(data: str) -> list[Row]:
